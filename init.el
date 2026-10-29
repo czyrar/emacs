@@ -20,17 +20,18 @@
 
 (straight-use-package 'use-package)
 
-;; Iosevka font
-(set-frame-font "IosevkaNerdFontMono 14")
-
-;; Disable GUI things
-(menu-bar-mode 0)
-(tool-bar-mode 0)
-(scroll-bar-mode 0)
-
-;; Better ido
-(ido-mode 1)
-(ido-everywhere 1)
+;; Base config
+(use-package emacs
+  :init
+  (set-frame-font "IosevkaNerdFontMono 14")
+  (menu-bar-mode 0)
+  (tool-bar-mode 0)
+  (scroll-bar-mode 0)
+  (ido-mode 1)
+  (ido-everywhere 1)
+  (show-paren-mode 1)
+  (column-number-mode 1)
+  (global-display-line-numbers-mode 1))
 
 (use-package ido-completing-read+
   :straight t
@@ -41,11 +42,6 @@
   :straight t
   :config
   (amx-mode 1))
-
-;; Show more info
-(show-paren-mode 1)
-(column-number-mode 1)
-(global-display-line-numbers-mode 1)
 
 ;; Git
 (use-package magit
@@ -80,21 +76,29 @@
 ;; Tree-sitter
 (use-package treesit
   :config
-  (setq treesit-language-source-alist
-	(append treesit-language-source-alist
-		'((fortran "https://github.com/stadelmanma/tree-sitter-fortran")))))
+  (add-to-list 'treesit-language-source-alist '(fortran "https://github.com/stadelmanma/tree-sitter-fortran")))
+
+;; LSP
+(use-package eglot
+  :hook (prog-mode . eglot-ensure)
+  :config
+  (add-to-list 'eglot-server-programs '((f90-mode f90-ts-mode) . ("fortitude" "server"))))
 
 ;; Fortran
 (use-package f90-ts-mode
   :straight t
-  :mode ("\\.f90\\'" . f90-ts-mode))
+  :mode "\\.f90\\'")
 
 ;; Python
 (use-package python-ts-mode
-  :mode ("\\.py\\'" . python-ts-mode))
+  :mode "\\.py\\'")
+
+(use-package micromamba
+  :straight t)
 
 (use-package ein
-  :straight t)
+  :straight t
+  :defer t)
 
 ;; Lisp
 (use-package paredit
@@ -149,6 +153,7 @@
  '(f90-ts-leading-ampersand-style '(indent . 2))
  '(f90-ts-smart-end 'no-blink)
  '(f90-type-indent 2)
+ '(indent-tabs-mode nil)
  '(initial-buffer-choice t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
