@@ -84,6 +84,14 @@
   :config
   (add-to-list 'eglot-server-programs '((f90-mode f90-ts-mode) . ("fortitude" "server"))))
 
+(use-package mason
+  :straight t
+  :config
+  (mason-setup
+   (dolist (pkg '("fortitude" "ty"))
+     (unless (mason-installed-p pkg)
+      (ignore-errors (mason-install pkg))))))
+
 ;; Fortran
 (use-package f90-ts-mode
   :straight t
