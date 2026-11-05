@@ -1,6 +1,12 @@
 ;; -*- lexical-binding: t; -*-
 
-;; Bootstrap straight.el
+;;; ========== MY CUSTOM VARIABLES ==========
+;; Set once here and it will affect the needed places
+(defvar fontname "IosevkaNerdFontMono")
+(defvar fontsize 14)
+(defvar lsps '("fortitude" "ty"))
+
+;;; ========== PACKAGE MANAGER ==========
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name
@@ -17,31 +23,59 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 (setq package-enable-at-startup nil)
-
 (straight-use-package 'use-package)
 
-;; Base config
+;;; ========== GENERAL CONFIG ==========
 (use-package emacs
   :init
-  (set-frame-font "IosevkaNerdFontMono 14")
+  (set-frame-font (concat fontname " " (number-to-string fontsize)))
   (menu-bar-mode 0)
   (tool-bar-mode 0)
   (scroll-bar-mode 0)
-  (ido-mode 1)
-  (ido-everywhere 1)
-  (show-paren-mode 1)
-  (column-number-mode 1)
-  (global-display-line-numbers-mode 1))
+  :config
+  (savehist-mode)
+  (show-paren-mode t)
+  (column-number-mode t)
+  (global-display-line-numbers-mode t)
+  (put 'upcase-region 'disabled nil)
+  :custom
+  (show-trailing-whitespace t)
+  (display-line-numbers-type 'relative)
+  (indent-tabs-mode nil)
+  (initial-buffer-choice t))
 
-(use-package ido-completing-read+
+;; Theme
+(use-package gruber-darker-ayu-theme
   :straight t
   :config
-  (ido-ubiquitous-mode 1))
+  (load-theme 'gruber-darker-ayu t))
 
-(use-package amx
+;; Use my Nerd Font
+(use-package nerd-icons
+  :custom
+  (nerd-icons-font-family fontname))
+
+;; Vertical IDO
+(use-package vertico
   :straight t
   :config
-  (amx-mode 1))
+  (vertico-mode)
+  (context-menu-mode t))
+
+;; Completion style
+(use-package orderless
+  :straight t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles partial-completion))))
+  (completion-category-defaults nil) ;; Disable defaults
+  (completion-pcm-leading-wildcard t)) ;; Emacs 31: partial-completion behaves like substring
+
+;; Annotations in M-x
+(use-package marginalia
+  :straight t
+  :config
+  (marginalia-mode))
 
 ;; Git
 (use-package magit
@@ -50,68 +84,21 @@
 ;; Better selection
 (use-package expand-region
   :straight t
-  :config
-  (global-set-key (kbd "C-=") 'er/expand-region))
+  :bind ("C-=" . er/expand-region))
 
 ;; Multiple cursors
 (use-package multiple-cursors
   :straight t
-  :config
-  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
-  (global-set-key (kbd "C->")         'mc/mark-next-like-this)
-  (global-set-key (kbd "C-<")         'mc/mark-previous-like-this)
-  (global-set-key (kbd "C-'")         'mc/skip-to-next-like-this)
-  (global-set-key (kbd "C-\"")        'mc/skip-to-previous-like-this))
+  :bind (("C-S-c C-S-c" . mc/edit-lines)
+         ("C->"         . mc/mark-next-like-this)
+         ("C-<"         . mc/mark-previous-like-this)
+         ("C-'"         . mc/skip-to-next-like-this)
+         ("C-\""        . mc/skipt-to-previous-like-this)))
 
 (use-package phi-search
   :straight t
-  :config
-  (global-set-key (kbd "C-s") 'phi-search)
-  (global-set-key (kbd "C-r") 'phi-search-backward)
-  (require 'phi-replace)
-  (global-set-key (kbd "M-%") 'phi-replace-query))
-
-;;; ========== FOR PROGRAMMING LANGUAGES ==========
-
-;; Tree-sitter
-(use-package treesit
-  :config
-  (add-to-list 'treesit-language-source-alist '(fortran "https://github.com/stadelmanma/tree-sitter-fortran")))
-
-;; LSP
-(use-package eglot
-  :hook (prog-mode . eglot-ensure)
-  :config
-  (add-to-list 'eglot-server-programs '((f90-mode f90-ts-mode) . ("fortitude" "server"))))
-
-(use-package mason
-  :straight t
-  :config
-  (mason-setup
-   (dolist (pkg '("fortitude" "ty"))
-     (unless (mason-installed-p pkg)
-      (ignore-errors (mason-install pkg))))))
-
-;; Fortran
-(use-package f90-ts-mode
-  :straight t
-  :mode "\\.f90\\'")
-
-;; Python
-(use-package python-ts-mode
-  :mode "\\.py\\'")
-
-(use-package micromamba
-  :straight t)
-
-(use-package ein
-  :straight t
-  :defer t)
-
-;; Lisp
-(use-package paredit
-  :straight t
-  :hook (emacs-lisp-mode-hook . paredit-mode))
+  :bind (("C-s" . phi-search)
+         ("C-r" . phi-search-backward)))
 
 ;; Move lines up or down
 (defun move-line-up ()
@@ -125,55 +112,87 @@
   (transpose-lines 1)
   (forward-line -1))
 
+(defun duplicate-line ()
+  (interactive)
+  (beginning-of-line)
+  (kill-line)
+  (yank)
+  (end-of-line)
+  (newline)
+  (yank))
+
 (global-set-key (kbd "M-<up>") 'move-line-up)
 (global-set-key (kbd "M-<down>") 'move-line-down)
+(global-set-key (kbd "M-p") 'duplicate-line)
 
-;; ========== HOOKS ==========
+;;; ========== FOR PROGRAMMING LANGUAGES ==========
 
-;; Delete trailing whitespaces
-(defun delete-trailing-whitespace-at-save ()
-  (interactive)
-  (setopt show-trailing-whitespace t)
-  (add-to-list 'write-file-functions 'delete-trailing-whitespace))
+;; Tree-sitter
+(use-package treesit
+  :config
+  (add-to-list 'treesit-language-source-alist '(fortran "https://github.com/stadelmanma/tree-sitter-fortran")))
 
-;; ========== OPTIONS SELECTED BY customize ==========
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   '("346abfbbf2d6327d5e5ae13bd1d2ee7f7c340c8a21b85948c479264a4f6c89cf"
-     default))
- '(f90-auto-keyword-case 'downcase-word)
- '(f90-beginning-ampersand nil)
- '(f90-continuation-indent 4)
- '(f90-do-indent 2)
- '(f90-if-indent 2)
- '(f90-smart-end 'no-blink)
- '(f90-ts-indent-block 2)
- '(f90-ts-indent-contain 2)
- '(f90-ts-indent-continued 4)
- '(f90-ts-indent-declaration 3)
- '(f90-ts-indent-delete-trailing-whitespace t)
- '(f90-ts-leading-ampersand nil)
- '(f90-ts-leading-ampersand-style '(indent . 2))
- '(f90-ts-smart-end 'no-blink)
- '(f90-type-indent 2)
- '(indent-tabs-mode nil)
- '(initial-buffer-choice t))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-(put 'upcase-region 'disabled nil)
-
-;; ========== THEMES ==========
-
-(use-package gruber-darker-ayu-theme
+;; LSP
+(use-package mason
   :straight t
   :config
-  (load-theme 'gruber-darker-ayu))
+  (mason-setup
+   (dolist (pkg lsps)
+     (unless (mason-installed-p pkg)
+      (ignore-errors (mason-install pkg))))))
+
+(use-package eglot
+  :hook (prog-mode . eglot-ensure)
+  :bind (:map eglot-mode-map
+              ("C-c l a" . eglot-code-actions)
+	      ("C-c l r" . eglot-rename)
+	      ("C-c l h" . eldoc)
+	      ("C-c l f" . eglot-format)
+	      ("C-c l F" . eglot-format-buffer)
+	      ("C-c l d" . xref-find-definitions-at-mouse)
+	      ("C-c l R" . eglot-reconnect))
+  :config
+  (add-to-list 'eglot-server-programs '((f90-mode f90-ts-mode) . ("fortitude" "server"))))
+
+;; Autocompletion
+(use-package corfu
+  :straight t
+  :hook (prog-mode . corfu-mode))
+
+;; Fortran
+(use-package f90-ts-mode
+  :straight t
+  :mode "\\.f90\\'"
+  :custom
+  (f90-auto-keyword-case 'downcase-word)
+  (f90-beginning-ampersand nil)
+  (f90-continuation-indent 4)
+  (f90-do-indent 2)
+  (f90-if-indent 2)
+  (f90-smart-end 'no-blink)
+  (f90-ts-indent-block 2)
+  (f90-ts-indent-contain 2)
+  (f90-ts-indent-continued 4)
+  (f90-ts-indent-declaration 3)
+  (f90-ts-indent-delete-trailing-whitespace t)
+  (f90-ts-leading-ampersand nil)
+  (f90-ts-leading-ampersand-style '(indent . 2))
+  (f90-ts-smart-end 'no-blink)
+  (f90-type-indent 2))
+
+;; Python
+(use-package python-ts-mode
+  :mode "\\.py\\'")
+
+(use-package micromamba
+  :straight t
+  :commands micromamba-activate)
+
+(use-package ein
+  :straight t
+  :commands ein:run)
+
+;; Emacs Lisp
+(use-package paredit
+  :straight t
+  :hook (emacs-lisp-mode-hook . paredit-mode))
