@@ -24,6 +24,7 @@
   (load bootstrap-file nil 'nomessage))
 (setq package-enable-at-startup nil)
 (straight-use-package 'use-package)
+(setq straight-use-package-by-default t)
 
 ;;; ========== GENERAL CONFIG ==========
 (use-package emacs
@@ -46,25 +47,17 @@
 
 ;; Theme
 (use-package gruber-darker-ayu-theme
-  :straight t
   :config
   (load-theme 'gruber-darker-ayu t))
 
-;; Use my Nerd Font
-(use-package nerd-icons
-  :custom
-  (nerd-icons-font-family fontname))
-
 ;; Vertical IDO
 (use-package vertico
-  :straight t
   :config
   (vertico-mode)
   (context-menu-mode t))
 
 ;; Completion style
 (use-package orderless
-  :straight t
   :custom
   (completion-styles '(orderless basic))
   (completion-category-overrides '((file (styles partial-completion))))
@@ -73,22 +66,18 @@
 
 ;; Annotations in M-x
 (use-package marginalia
-  :straight t
   :config
   (marginalia-mode))
 
 ;; Git
-(use-package magit
-  :straight t)
+(use-package magit)
 
 ;; Better selection
 (use-package expand-region
-  :straight t
   :bind ("C-=" . er/expand-region))
 
 ;; Multiple cursors
 (use-package multiple-cursors
-  :straight t
   :bind (("C-S-c C-S-c" . mc/edit-lines)
          ("C->"         . mc/mark-next-like-this)
          ("C-<"         . mc/mark-previous-like-this)
@@ -96,7 +85,6 @@
          ("C-\""        . mc/skipt-to-previous-like-this)))
 
 (use-package phi-search
-  :straight t
   :bind (("C-s" . phi-search)
          ("C-r" . phi-search-backward)))
 
@@ -128,13 +116,13 @@
 ;;; ========== FOR PROGRAMMING LANGUAGES ==========
 
 ;; Tree-sitter
-(use-package treesit
-  :config
-  (add-to-list 'treesit-language-source-alist '(fortran "https://github.com/stadelmanma/tree-sitter-fortran")))
+(use-package tree-sitter-langs)
+
+(use-package tree-sitter
+  :requires (tree-sitter-langs))
 
 ;; LSP
 (use-package mason
-  :straight t
   :config
   (mason-setup
    (dolist (pkg lsps)
@@ -156,12 +144,10 @@
 
 ;; Autocompletion
 (use-package corfu
-  :straight t
   :hook (prog-mode . corfu-mode))
 
 ;; Fortran
 (use-package f90-ts-mode
-  :straight t
   :mode "\\.f90\\'"
   :custom
   (f90-auto-keyword-case 'downcase-word)
@@ -181,18 +167,12 @@
   (f90-type-indent 2))
 
 ;; Python
-(use-package python-ts-mode
-  :mode "\\.py\\'")
-
 (use-package micromamba
-  :straight t
   :commands micromamba-activate)
 
 (use-package ein
-  :straight t
   :commands ein:run)
 
 ;; Emacs Lisp
 (use-package paredit
-  :straight t
   :hook (emacs-lisp-mode-hook . paredit-mode))
