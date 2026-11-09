@@ -7,6 +7,7 @@
 (defvar lsps '("fortitude" "ty"))
 
 ;;; ========== PACKAGE MANAGER ==========
+(setq package-enable-at-startup nil)
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name
@@ -22,7 +23,7 @@
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
-(setq package-enable-at-startup nil)
+(setq straight-check-for-modifications '(watch-files find-when-checking))
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
