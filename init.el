@@ -44,7 +44,16 @@
   (show-trailing-whitespace t)
   (display-line-numbers-type 'relative)
   (indent-tabs-mode nil)
-  (initial-buffer-choice t))
+  (initial-buffer-choice t)
+  ;; Fortran
+  (f90-auto-keyword-case 'downcase-word)
+  (f90-beginning-ampersand nil)
+  (f90-continuation-indent 4)
+  (f90-do-indent 2)
+  (f90-if-indent 2)
+  (f90-smart-end 'no-blink)
+  (f90-type-indent 2)
+  )
 
 ;; Theme
 (use-package gruber-darker-ayu-theme
@@ -117,18 +126,29 @@
 ;;; ========== FOR PROGRAMMING LANGUAGES ==========
 
 ;; Tree-sitter
-(use-package tree-sitter-langs)
-
 (use-package tree-sitter
-  :requires (tree-sitter-langs))
+  :config
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+(use-package tree-sitter-langs
+  :custom
+  ;; Fortran
+  (f90-ts-indent-block 2)
+  (f90-ts-indent-contain 2)
+  (f90-ts-indent-continued 4)
+  (f90-ts-indent-declaration 3)
+  (f90-ts-indent-delete-trailing-whitespace t)
+  (f90-ts-leading-ampersand nil)
+  (f90-ts-leading-ampersand-style '(indent . 2))
+  (f90-ts-smart-end 'no-blink))
 
 ;; LSP
 (use-package mason
   :config
   (mason-setup
-   (dolist (pkg lsps)
-     (unless (mason-installed-p pkg)
-      (ignore-errors (mason-install pkg))))))
+    (dolist (pkg lsps)
+      (unless (mason-installed-p pkg)
+        (ignore-errors (mason-install pkg))))))
 
 (use-package eglot
   :hook (prog-mode . eglot-ensure)
@@ -146,26 +166,6 @@
 ;; Autocompletion
 (use-package corfu
   :hook (prog-mode . corfu-mode))
-
-;; Fortran
-(use-package f90-ts-mode
-  :mode "\\.f90\\'"
-  :custom
-  (f90-auto-keyword-case 'downcase-word)
-  (f90-beginning-ampersand nil)
-  (f90-continuation-indent 4)
-  (f90-do-indent 2)
-  (f90-if-indent 2)
-  (f90-smart-end 'no-blink)
-  (f90-ts-indent-block 2)
-  (f90-ts-indent-contain 2)
-  (f90-ts-indent-continued 4)
-  (f90-ts-indent-declaration 3)
-  (f90-ts-indent-delete-trailing-whitespace t)
-  (f90-ts-leading-ampersand nil)
-  (f90-ts-leading-ampersand-style '(indent . 2))
-  (f90-ts-smart-end 'no-blink)
-  (f90-type-indent 2))
 
 ;; Python
 (use-package micromamba
