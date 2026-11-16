@@ -126,13 +126,19 @@
 ;;; ========== FOR PROGRAMMING LANGUAGES ==========
 
 ;; Tree-sitter
-(use-package tree-sitter
-  :config
-  (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
-(use-package tree-sitter-langs
+(use-package treesit-auto
   :custom
-  ;; Fortran
+  (treesit-auto-install 'prompt)
+  :config
+  (setq treesit-language-source-alist
+        (append treesit-language-source-alist
+                '((fortran "https://github.com/stadelmanma/tree-sitter-fortran"))))
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
+
+(use-package f90-ts-mode
+  :mode ("\\.f90\\'" . f90-ts-mode)
+  :custom
   (f90-ts-indent-block 2)
   (f90-ts-indent-contain 2)
   (f90-ts-indent-continued 4)
